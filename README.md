@@ -11,7 +11,8 @@
 <div align="center">
   <a href="#a-propos">A propos</a> •
   <a href="#installation">Installation</a> •
-  <a href="#resultat">Resultat</a>
+  <a href="#resultat">Resultat</a> •
+  <a href="#exemple">Exemple</a>
 </div>
 
 # A propos
@@ -41,6 +42,9 @@ $ node index <url> <classpasth>
 
 Un fichier `index.vue` est généré.
 
+## Exemple
+
+$ node index https://bootstrapmade.com/ #header
 
 ## Contributeurs
 
