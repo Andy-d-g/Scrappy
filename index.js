@@ -3,8 +3,8 @@ import purify from 'purify-css'
 import beautify from 'js-beautify'
 import fs from 'fs'
 
-const URL = 'https://bootstrapmade.com/'
-const SELECTOR = '#header'
+const URL_test = 'https://bootstrapmade.com/'
+const SELECTOR_test = '#header'
 
 const beautify_code = (data, type) => {
     switch (type) {
@@ -53,6 +53,9 @@ const start = async (url, selector) => {
     await browser.close();
 }
 
-//init(process.argv[2])
-start(URL, SELECTOR)
+const init = () => {
+    if (process.argv.length !== 4) console.log("Le nombre d'argument n'est pas correct")
+    else start(process.argv[2], process.argv[3])
+}
 
+init()

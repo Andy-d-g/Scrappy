@@ -1,7 +1,7 @@
 <div align="center">
   <h1>
     <br>
-    <a href=""><img src="robot.jpeg" alt="Favicon" width="200"></a>
+    <a href=""><img src="stealing-data.png" alt="Favicon" width="200"></a>
     <br>
     HTML Scrappy
     <br>
