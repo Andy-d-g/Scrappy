@@ -1,0 +1,17 @@
+{
+  "name": "htmlscapy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "js-beautify": "^1.14.0",
+    "puppeteer": "^10.4.0",
+    "purify-css": "^1.2.5"
+  }
+}
