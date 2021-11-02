@@ -44,7 +44,7 @@ Un fichier `index.vue` est généré.
 
 ## Exemple
 
-$ node index https://bootstrapmade.com/ #header
+```node index https://bootstrapmade.com/ #header```
 
 ## Contributeurs
 
