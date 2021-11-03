@@ -34,7 +34,7 @@ $ cd HTML_scrappy
 $ npm i
 
 # Lancer le programme
-$ node index <url> <classpasth>
+$ node index <url> <selector>
 
 ```
 

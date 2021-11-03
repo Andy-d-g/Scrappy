@@ -18,7 +18,7 @@ const beautify_code = (data, type) => {
 const create_component = (html, css) => {
     const script = fs.readFileSync('./script_template.txt', 'utf8')
     html = `<template>\n${html}\n</template>\n`
-    css = `\n<style>\n${css}\n</style>`    
+    css = `\n<style scoped>\n${css}\n</style>`    
 
     fs.writeFile('./index.vue', `${html}${script}${css}`, err => {})
 }
