@@ -110,7 +110,7 @@ const scrappy = async (url, selector) => {
 
         if (LOG) console.log(`Traitement stylesheets : ...`)
         styles_sheet.forEach(s => {
-            console.log(`Stylesheet : ${s.href}`)
+            if (LOG) if (s.href) console.log(`Stylesheet : ${s.href}`)
             s.data.forEach(css => {
                 obj = extend(true, obj, parse_css_file(css))
             })
