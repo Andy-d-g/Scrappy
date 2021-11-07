@@ -11,7 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "js-beautify": "^1.14.0",
-    "json-to-css": "^0.1.0",
     "puppeteer": "^10.4.0",
     "uncss": "^0.17.3"
   }
