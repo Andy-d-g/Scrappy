@@ -59,7 +59,7 @@ const extend = function () {
     return extended;
 };
 
-const start = async (url, selector) => {
+const scrappy = async (url, selector) => {
     try {
         let html, css, styles_sheet, styles_balise;
         const browser = await puppeteer.launch({
@@ -118,7 +118,7 @@ const start = async (url, selector) => {
 
 const init = () => {
     if (process.argv.length !== 4) console.log("Le nombre d'argument n'est pas correct")
-    else start(process.argv[2], process.argv[3])
+    else scrappy(process.argv[2], process.argv[3])
 }
 
 init()
