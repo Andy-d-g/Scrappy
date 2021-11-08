@@ -12,16 +12,16 @@ const create_component = (html, css) => {
     fs.writeFile('./index.vue', `${html}${script}${css}`, err => {})
 }
 
-const _json_to_css = (obj) => {
+const _obj_to_css = (obj) => {
     let cssfile = ''
     Object.keys(obj).forEach(k => {
-        if (typeof obj[k] === 'object' && obj[k] !== null) cssfile += `${k} {${_json_to_css(obj[k])}}`
+        if (typeof obj[k] === 'object' && obj[k] !== null) cssfile += `${k} {${_obj_to_css(obj[k])}}`
         else cssfile += `${k}: ${obj[k]};`
     })
     return cssfile
 }
 
-const json_to_css = (obj) => beautify.css(_json_to_css(obj), { indent_size: 4, space_in_empty_paren: true })
+const obj_to_css = (obj) => beautify.css(_obj_to_css(obj), { indent_size: 4, space_in_empty_paren: true })
 
 const extend = function () {
     /*  https://gomakethings.com/merging-objects-with-vanilla-javascript/  */
@@ -106,7 +106,7 @@ const scrappy = async (url, selector) => {
             })
         })
 
-        css = json_to_css(obj)
+        css = obj_to_css(obj)
 
         uncss(html, {raw: css}, (error, output) => {
             create_component(html, output)
