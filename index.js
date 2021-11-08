@@ -4,8 +4,6 @@ import fs from 'fs'
 import uncss from 'uncss'
 import parse_css_file from './parse_css.js';
 
-const LOG = true
-
 const create_component = (html, css) => {
     const script = fs.readFileSync('./script_template.txt', 'utf8')
     html = `<template>\n${html}\n</template>\n`
@@ -67,7 +65,6 @@ const scrappy = async (url, selector) => {
         const browser = await puppeteer.launch({
             headless: true
         });
-        if (LOG) console.log(`Browser : ok`)
         const agent = await browser.userAgent()
         const page = await browser.newPage();
         page.setUserAgent(agent.slice(0, agent.indexOf('Headless')))
@@ -78,14 +75,10 @@ const scrappy = async (url, selector) => {
         });
         await page.goto(url);
         await page.waitForSelector(selector)
-        if (LOG) console.log(`Page : ok`)
     
-        if (LOG) console.log(`Extraction HTML : ...`)
         html = await page.$eval(selector, doc => doc.outerHTML)
         html = beautify.html(html, { indent_size: 4, space_in_empty_paren: true })
-        if (LOG) console.log(`Extraction HTML : ok`)
 
-        if (LOG) console.log(`Extraction stylesheets : ...`)
         styles_sheet = await page.$eval('html', (doc) => {
             const stylesSheets = [...doc.parentNode.styleSheets]
             let sheet = []
@@ -104,26 +97,19 @@ const scrappy = async (url, selector) => {
             }
             return sheet;
         })
-        if (LOG) console.log(`Extraction stylesheets : ok`)
     
         let obj = {}
 
-        if (LOG) console.log(`Traitement stylesheets : ...`)
         styles_sheet.forEach(s => {
-            if (LOG) if (s.href) console.log(`Stylesheet : ${s.href}`)
             s.data.forEach(css => {
                 obj = extend(true, obj, parse_css_file(css))
             })
         })
-        if (LOG) console.log(`Traitement stylesheets : ok`)
-    
-        if (LOG) console.log(`OBJ -> CSS : ...`)
+
         css = json_to_css(obj)
-        if (LOG) console.log(`OBJ -> CSS : ok`)
-        if (LOG) console.log(`Creation du component : ...`)
+
         uncss(html, {raw: css}, (error, output) => {
             create_component(html, output)
-            if (LOG) console.log(`Creation du component : ok`)
         })
         
 
