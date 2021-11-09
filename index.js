@@ -111,7 +111,6 @@ const scrappy = async (url, selector) => {
         uncss(html, {raw: css}, (error, output) => {
             create_component(html, output)
         })
-        
 
         await browser.close();
 

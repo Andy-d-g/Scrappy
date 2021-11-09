@@ -46,12 +46,6 @@ const SELECTOR_CSS = [
     ":visited"
 ]
 
-const delete_unnecessary_space = (text) => {
-    while (text[0] === ' ') text = text.slice(1, text.length)
-    while (text[text.length-1] === ' ') text = text.slice(0, text.length-1)
-    return text
-}
-
 const isSelector = (content) => {
     for (let i = content.length-1; i > 0; i--) {
         let part = content.slice(0, i)
@@ -62,7 +56,7 @@ const isSelector = (content) => {
 
 const sanitazeSelector = (selector) => {
     let parts = selector.split(',')
-    for (let i = 0; i < parts.length; i++) parts[i] = delete_unnecessary_space(parts[i])
+    for (let i = 0; i < parts.length; i++) parts[i] = parts[i].trim()
     return parts.join(', ')
 }
 
@@ -79,7 +73,7 @@ const _parse_css_file = (css, i, p) => {
         else if  (css[i] === ')') parenthese--
         else if (css[i] === '{') {
             if (DEBUG) console.log('----- {')
-            selector = sanitazeSelector(delete_unnecessary_space(buffer))
+            selector = sanitazeSelector(buffer.trim())
             buffer = ''
             let res = _parse_css_file(css, i+1, p+1)
             obj[selector] = res.data
@@ -87,7 +81,7 @@ const _parse_css_file = (css, i, p) => {
         }
         else if (css[i] === '}') {
             if (DEBUG) console.log('----- }')
-            if (delete_unnecessary_space(buffer)) obj[selector] = delete_unnecessary_space(buffer)
+            if (buffer.trim()) obj[selector] = buffer.trim()
             return {index: i+1, data: obj}
         }
         else if (css[i] === ':') {
@@ -103,7 +97,7 @@ const _parse_css_file = (css, i, p) => {
             }
 
             else {
-                selector = sanitazeSelector(delete_unnecessary_space(buffer))
+                selector = sanitazeSelector(buffer.trim())
                 buffer = ''
                 i++
             }
@@ -111,9 +105,9 @@ const _parse_css_file = (css, i, p) => {
         }
         else if (css[i] === ';') {
             if (DEBUG) console.log('----- ;')
-            if (DEBUG) console.log(`${selector} : ${delete_unnecessary_space(buffer)}`)
+            if (DEBUG) console.log(`${selector} : ${buffer.trim()}`)
             if (!parenthese) {
-                obj[selector] = delete_unnecessary_space(buffer)
+                obj[selector] = buffer.trim()
                 buffer = ''
             }
             i++
