@@ -9,7 +9,7 @@ const create_component = (html, css) => {
     html = `<template>\n${html}\n</template>\n`
     css = `\n<style scoped>\n${css}\n</style>`    
 
-    fs.writeFile('./index.vue', `${html}${script}${css}`, err => {})
+    fs.writeFile('./index.vue', `${html}${script}${css}`, () => {console.log('Fichier créer avec succès !')})
 }
 
 const _obj_to_css = (obj) => {
@@ -23,45 +23,17 @@ const _obj_to_css = (obj) => {
 
 const obj_to_css = (obj) => beautify.css(_obj_to_css(obj), { indent_size: 4, space_in_empty_paren: true })
 
-const extend = function () {
-    /*  https://gomakethings.com/merging-objects-with-vanilla-javascript/  */
-
-    // Variables
-    var extended = {};
-    var deep = false;
-    var i = 0;
-
-    // Check if a deep merge
-    if ( Object.prototype.toString.call( arguments[0] ) === '[object Boolean]' ) {
-        deep = arguments[0];
-        i++;
+const merge = (current, updates) => {
+    for (let key of Object.keys(updates)) {
+        if (!current.hasOwnProperty(key) || typeof updates[key] !== 'object') current[key] = updates[key];
+        else merge(current[key], updates[key]);
     }
-
-    // Merge the object into the extended object
-    var merge = function (obj) {
-        for (var prop in obj) {
-            if (obj.hasOwnProperty(prop)) {
-                // If property is an object, merge properties
-                if (deep && Object.prototype.toString.call(obj[prop]) === '[object Object]') {
-                    extended[prop] = extend(extended[prop], obj[prop]);
-                } else {
-                    extended[prop] = obj[prop];
-                }
-            }
-        }
-    };
-
-    // Loop through each object and conduct a merge
-    for (; i < arguments.length; i++) {
-        merge(arguments[i]);
-    }
-
-    return extended;
-};
+    return current;
+}
 
 const scrappy = async (url, selector) => {
     try {
-        let html, css, styles_sheet, styles_balise;
+        let html, css, styles_sheet;
         const browser = await puppeteer.launch({
             headless: true
         });
@@ -101,8 +73,8 @@ const scrappy = async (url, selector) => {
         let obj = {}
 
         styles_sheet.forEach(s => {
-            s.data.forEach(css => {
-                obj = extend(true, obj, parse_css_file(css))
+            s.data.forEach(_css => {
+                obj = merge(obj, parse_css_file(_css))
             })
         })
 
