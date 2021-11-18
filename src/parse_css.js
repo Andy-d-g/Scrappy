@@ -1,4 +1,3 @@
-const DEBUG = false
 const MAX_LENGHT_CSS_SELECTOR = 18
 const SELECTOR_CSS = [
     ":active",
@@ -67,12 +66,10 @@ const _parse_css_file = (css, i) => {
     let parenthese = 0
 
     for (; i < css.length; i++) {
-        if (DEBUG) console.log(`buffer : ${buffer}`)
 
         if (css[i] === '(') parenthese++
         else if  (css[i] === ')') parenthese--
         else if (css[i] === '{') {
-            if (DEBUG) console.log('----- {')
             selector = sanitazeSelector(buffer.trim())
             buffer = ''
             let res = _parse_css_file(css, i+1)
@@ -80,16 +77,13 @@ const _parse_css_file = (css, i) => {
             i = res.index
         }
         else if (css[i] === '}') {
-            if (DEBUG) console.log('----- }')
             if (buffer.trim()) obj[selector] = buffer.trim()
             return {index: i+1, data: obj}
         }
         else if (css[i] === ':') {
-            if (DEBUG) console.log('----- :')
             
             let lengthSelector = isSelector(css.slice(i, i+MAX_LENGHT_CSS_SELECTOR+1))
 
-            if (DEBUG) console.log('isSelector : ' + (lengthSelector!==0))
 
             if (lengthSelector || parenthese) {
                 buffer += css.slice(i, i+lengthSelector)
@@ -104,8 +98,7 @@ const _parse_css_file = (css, i) => {
             
         }
         else if (css[i] === ';') {
-            if (DEBUG) console.log('----- ;')
-            if (DEBUG) console.log(`${selector} : ${buffer.trim()}`)
+
             if (!parenthese) {
                 obj[selector] = buffer.trim()
                 buffer = ''

@@ -1,16 +1,8 @@
 import puppeteer from 'puppeteer';
 import beautify from 'js-beautify'
-import fs from 'fs'
 import uncss from 'uncss'
+import create_component from './utils.js'
 import parse_css_file from './parse_css.js';
-
-const create_component = (html, css) => {
-    const script = fs.readFileSync('./script_template.txt', 'utf8')
-    html = `<template>\n${html}\n</template>\n`
-    css = `\n<style scoped>\n${css}\n</style>`    
-
-    fs.writeFile('./index.vue', `${html}${script}${css}`, () => {console.log('Fichier créer avec succès !')})
-}
 
 const _obj_to_css = (obj) => {
     let cssfile = ''
