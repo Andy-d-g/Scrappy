@@ -27,24 +27,29 @@ Depuis votre terminal de commande :
 # Cloner le repertoire
 $ git clone https://github.com/Andy-d-g/HTML_scrappy.git
 
-# Aller dans le repertoire
-$ cd HTML_scrappy
+# Aller dans le repertoire src
+$ cd HTML_scrappy/src
 
 # Installer les package
-$ npm i
+$ npm run start
 
-# Lancer le programme
-$ node index <url> <selector>
+# Lancer le scrapper
+$ node scrapper <url> <selector>
+
+# Lancer le cleaner après nettoyage manuel de l'index.html
+$ node sanitazer
 
 ```
 
 ## Resultat
 
-Un fichier `index.vue` est généré.
+Les fichiers `index.vue` + `index.html` + `styles.css` sont générés.
 
 ## Exemple
 
-```node index https://bootstrapmade.com/ #header```
+```node scrapper https://bootstrapmade.com/ #header```
+
+```node sanitazer```
 
 ## Contributeurs
 
