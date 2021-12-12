@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "esprima": "^4.0.1",
     "js-beautify": "^1.14.0",
     "puppeteer": "^10.4.0",
     "uncss": "^0.17.3"
