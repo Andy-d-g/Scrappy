@@ -81,31 +81,25 @@ const _parse_css_file = (css, i) => {
             return {index: i+1, data: obj}
         }
         else if (css[i] === ':') {
-            
             let lengthSelector = isSelector(css.slice(i, i+MAX_LENGHT_CSS_SELECTOR+1))
-
-
             if (lengthSelector || parenthese) {
                 buffer += css.slice(i, i+lengthSelector)
                 i+=lengthSelector
             }
-
             else {
                 selector = sanitazeSelector(buffer.trim())
                 buffer = ''
                 i++
             }
-            
         }
         else if (css[i] === ';') {
-
             if (!parenthese) {
                 obj[selector] = buffer.trim()
                 buffer = ''
             }
-            i++
+            if (css[i+1] === ' ') i++
         }
-        if (css[i] !== '\n') buffer += css[i]
+        if (css[i] !== '\n' && css[i] !== ';') buffer += css[i]
     }
     return obj
 }
