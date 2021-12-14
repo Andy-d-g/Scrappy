@@ -84,8 +84,8 @@ const scrappy = async (url, selector) => {
 }
 
 const init = () => {
-    if (process.argv.length !== 4) console.log("Le nombre d'argument n'est pas correct")
-    else scrappy(process.argv[2], process.argv[3])
+    if (process.argv.length < 4) console.log("Le nombre d'argument n'est pas correct")
+    else scrappy(process.argv[2], process.argv.slice(3).join(" "))
 }
 
 init()
