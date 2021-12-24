@@ -34,10 +34,10 @@ $ cd HTML_scrappy/src
 $ npm run start
 
 # Lancer le scrapper
-$ node scrapper <url> <selector>
+$ node src/scrapper <url> <selector>
 
 # Lancer le cleaner après nettoyage manuel de l'index.html
-$ node sanitazer
+$ node src/sanitazer
 
 ```
 
@@ -47,9 +47,9 @@ Les fichiers `index.vue` + `index.html` + `styles.css` sont générés.
 
 ## Exemple
 
-```node scrapper https://bootstrapmade.com/ #header```
+```node src/scrapper https://bootstrapmade.com/ #header```
 
-```node sanitazer```
+```node src/sanitazer```
 
 ## Contributeurs
 
