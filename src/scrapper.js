@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer';
 import beautify from 'js-beautify'
 import uncss from 'uncss'
-import create_component from './utils.js'
-import parse_css_file from './parse_css.js';
+import create_component from './component.js'
+import parse_css_file from './css/parse_css.js';
 
 const _obj_to_css = (obj) => {
     let cssfile = ''

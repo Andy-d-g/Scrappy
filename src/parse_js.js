@@ -1,2 +1,0 @@
-import esprima from "esprima"
-

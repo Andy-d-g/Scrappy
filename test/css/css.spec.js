@@ -1,5 +1,5 @@
 import { expect } from "chai"
-import parse_css_file from "../src/parse_css.js"
+import parse_css_file from "../../src/css/parse_css.js"
 
 describe("CSS rules", () => {
     it("* / ::after / ::before", () => {
