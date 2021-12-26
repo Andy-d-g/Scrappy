@@ -23,14 +23,21 @@ const getTypeOfBlock = (block) => {
 
 const getParams = (block) => {
 	let params = ""
-	block.declarations[0].init.params.forEach((p, index) => {
-		params += file.slice(p.range[0], p.range[1])
-		if (index < block.declarations[0].init.params.length-1) { params += ", " }
-	})
+    let array = block.type === "FunctionDeclaration" 
+    ? block.params
+    : block.declarations[0].init.params
+    array.forEach((p, index) => {
+        params += p.name
+        if (index < array.length-1) { params += ", " }
+    }) 
 	return params;
 }
 
-const getName = (block) => block.declarations[0].id.name
+const getName = (block) => {
+    return block.type === "FunctionDeclaration"
+    ? block.id.name
+    : block.declarations[0].id.name
+}
 
 const modifyContent = (block, prog, depth) => {
 	let rangeName = block.declarations[0].id.range
@@ -39,7 +46,9 @@ const modifyContent = (block, prog, depth) => {
 }
 
 const getFunctionContent = (block, prog) => {
-	let range = block.declarations[0].init.body.range
+    let range = block.type === "FunctionDeclaration"
+    ? block.body.range
+    : block.declarations[0].init.body.range
 	return prog.slice(range[0], range[1])
 }
 

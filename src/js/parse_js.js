@@ -11,6 +11,7 @@ const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], c
 	let parsed_code = [];
 	const tree = esprima.parse(prog, {range: true})
 	tree.body.forEach(block => {
+		//console.log(block)
 		type = utils.getTypeOfBlock(block)
 		if (type === "declarationFunction") {
 			content = utils.getFunctionContent(block, prog)
@@ -50,21 +51,14 @@ const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], c
 	}
 }
 
-const prog3 = `let a = 3`
-const prog4 = "const a = () => {}"
-const prog5 = `const a = () => {let b = 1}`
-const prog6 = `const a = () => {
-	const b = () => {
-		let x = 1;
-	}
-	let e = 0
-}
-let p = 3`
-const prog7 = `
-const a = () => {
-	const b = () => {}
-}`
+const prog0 = `function a() {}`
 
-console.log(parse_js_file(prog6))
+const prog1 = `
+const a = (x,y) => {
+
+}
+`
+
+console.log(parse_js_file(prog0))
 
 export default parse_js_file
