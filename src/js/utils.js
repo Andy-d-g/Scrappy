@@ -29,15 +29,14 @@ const getTypeOfBlock = (block) => {
     return "unknow"
 }
 
-const getParams = (block) => {
-	let params = ""
+const getFunctionParameters = (block) => {
+	let params = []
     let array = block.type === "FunctionDeclaration" 
     ? block.params
     : block.declarations[0].init.params
-    array.forEach((p, index) => {
-        params += p.name
-        if (index < array.length-1) { params += ", " }
-    }) 
+    array.forEach((p) => {
+        params.push(p.name)
+    })
 	return params;
 }
 
@@ -64,7 +63,7 @@ const getFunctionContent = (block, prog) => {
 
 export {
     getTypeOfBlock,
-    getParams,
+    getFunctionParameters,
     getName,
     modifyContent,
     getFunctionContent,

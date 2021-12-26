@@ -1,7 +1,7 @@
 import esprima from "esprima"
 import { 
 	getTypeOfBlock, 
-	getParams, 
+	getFunctionParameters, 
 	getName, 
 	modifyContent, 
 	getFunctionContent, 
@@ -10,17 +10,21 @@ import {
 
 const handleDeclarationFunction = (block, prog, methods, data) => {
 	let res, content, name, params, parsed;
-	parsed = ""
+	parsed = []
 	content = getFunctionContent(block, prog)
+	name = getName(block)
+	params = getFunctionParameters(block)
 	if (content !== '{}') {
 		content = getContentOfRange([1, content.length-1], content)
-		res = parse_js_file(content, 1, [], methods, data)
+		res = parse_js_file(content, 1, [], methods, data, [], params)
 		methods = res.methods
 		parsed = res.code
 	}
-	name = getName(block)
-	params = getParams(block)
-	methods.push(`${name}(${params}){${parsed}}`)
+	methods.push({
+		name,
+		params,
+		code: parsed
+	})
 	return methods
 }
 
@@ -66,10 +70,10 @@ const handleAssignementVariable = (block, prog, created, data, code, local_var) 
 	}
 }
 
-const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], code = []) => {
+const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], code = [], params = []) => {
 	let type;
 	let res;
-	let local_var = []; 
+	let local_var = [...params]; 
 	const tree = esprima.parse(prog, {range: true})
 	tree.body.forEach(block => {
 		type = getTypeOfBlock(block)
@@ -99,5 +103,17 @@ const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], c
 		depth
 	}
 }
+
+const prog = `
+	const a = () => {
+		let b = 3;
+		function c(d,e){
+			d = 3;
+			e = d;
+		}
+	}
+`
+
+//console.log(JSON.stringify(parse_js_file(prog), undefined, 4))
 
 export default parse_js_file

@@ -54,7 +54,13 @@ describe("JS rules", () => {
                 expect(parsed.code).to.deep.equal([])
                 expect(parsed.created).to.deep.equal([])
                 expect(parsed.methods).to.deep.equal([
-                    'a(){let b = 3}'
+                    {
+                        name: "a",
+                        params: [],
+                        code: [
+                            "let b = 3"
+                        ]
+                    }
                 ])
                 expect(parsed.data).to.deep.equal([])
                 expect(parsed.depth).to.equal(1)
@@ -70,7 +76,13 @@ describe("JS rules", () => {
                 expect(parsed.code).to.deep.equal([])
                 expect(parsed.created).to.deep.equal([])
                 expect(parsed.methods).to.deep.equal([
-                    'a(){const b = 3}'
+                    {
+                        name: "a",
+                        params: [],
+                        code: [
+                            "const b = 3"
+                        ]
+                    }
                 ])
                 expect(parsed.data).to.deep.equal([])
                 expect(parsed.depth).to.equal(1)
@@ -92,7 +104,11 @@ describe("JS rules", () => {
                         code: [],
                         created: [],
                         methods: [
-                            'a(){}'
+                            {
+                                name: "a",
+                                params: [],
+                                code: []
+                            }
                         ],
                         data: [],
                         depth: 0
@@ -110,7 +126,11 @@ describe("JS rules", () => {
                         code: [],
                         created: [],
                         methods: [
-                            'a(){}'
+                            {
+                                name: "a",
+                                params: [],
+                                code: []
+                            }
                         ],
                         data: [],
                         depth: 0
@@ -130,7 +150,11 @@ describe("JS rules", () => {
                         code: [],
                         created: [],
                         methods: [
-                            'a(x, y){}'
+                            {
+                                name: "a",
+                                params: ["x", "y"],
+                                code: []
+                            }
                         ],
                         data: [],
                         depth: 0
@@ -148,7 +172,11 @@ describe("JS rules", () => {
                         code: [],
                         created: [],
                         methods: [
-                            'a(x, y){}'
+                            {
+                                name: "a",
+                                params: ["x", "y"],
+                                code: []
+                            }
                         ],
                         data: [],
                         depth: 0
@@ -171,8 +199,16 @@ describe("JS rules", () => {
                 expect(parsed.code).to.deep.equal([])
                 expect(parsed.created).to.deep.equal([])
                 expect(parsed.methods).to.deep.equal([
-                    'b(){}',
-                    'a(){}'
+                    {
+                        name: "b",
+                        params: [],
+                        code: []
+                    },
+                    {
+                        name: "a",
+                        params: [],
+                        code: []
+                    }
                 ])
                 expect(parsed.data).to.deep.equal([])
                 expect(parsed.depth).to.equal(0)
@@ -191,8 +227,16 @@ describe("JS rules", () => {
                 expect(parsed.code).to.deep.equal([])
                 expect(parsed.created).to.deep.equal([])
                 expect(parsed.methods).to.deep.equal([
-                    'b(){}',
-                    'a(){}'
+                    {
+                        name: "b",
+                        params: [],
+                        code: []
+                    },
+                    {
+                        name: "a",
+                        params: [],
+                        code: []
+                    }
                 ])
                 expect(parsed.data).to.deep.equal([])
                 expect(parsed.depth).to.equal(0)
@@ -213,7 +257,13 @@ describe("JS rules", () => {
                 expect(parsed.code).to.deep.equal([])
                 expect(parsed.created).to.deep.equal([])
                 expect(parsed.methods).to.deep.equal([
-                    'a(){let a = 3}'
+                    {
+                        name: "a",
+                        params: [],
+                        code: [
+                            "let a = 3"
+                        ]
+                    }
                 ])
                 expect(parsed.data).to.deep.equal([])
                 expect(parsed.depth).to.equal(0)
@@ -230,9 +280,7 @@ describe("JS rules", () => {
                 const parsed = parse_js_file(prog)
     
                 // Then
-                expect(parsed.code).to.deep.equal([
-                    
-                ])
+                expect(parsed.code).to.deep.equal([])
                 expect(parsed.created).to.deep.equal([
                     'this.a = 3'
                 ])
