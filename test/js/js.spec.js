@@ -282,7 +282,7 @@ describe("JS rules", () => {
                 // Then
                 expect(parsed.code).to.deep.equal([])
                 expect(parsed.created).to.deep.equal([
-                    'this.a = 3'
+                    'this.a = 3;'
                 ])
                 expect(parsed.methods).to.deep.equal([])
                 expect(parsed.data).to.deep.equal([
@@ -303,6 +303,55 @@ describe("JS rules", () => {
                 expect(parsed.code).to.deep.equal([
                     'let a;',
                     'a = 3;'
+                ])
+                expect(parsed.created).to.deep.equal([])
+                expect(parsed.methods).to.deep.equal([])
+                expect(parsed.data).to.deep.equal([])
+                expect(parsed.depth).to.equal(1)
+            })
+        })
+    })
+    describe("Block", () => {
+        describe("Profondeur = 0", () => {
+            it("adapt in fonctin of identifier known", () => {
+                // Given
+                const prog = `
+                    let a = 3;
+                    const b = a;
+                `
+
+                // When
+                const parsed = parse_js_file(prog, 0)
+
+                // Then
+                expect(parsed.code).to.deep.equal([])
+                expect(parsed.created).to.deep.equal([
+                    'this.a = 3;',
+                    'this.b = this.a;'
+                ])
+                expect(parsed.methods).to.deep.equal([])
+                expect(parsed.data).to.deep.equal([
+                    "a",
+                    "b"
+                ])
+                expect(parsed.depth).to.equal(0)
+            })
+        })
+        describe("Profondeur > 0", () => {
+            it("adapt in fonctin of identifier known", () => {
+                // Given
+                const prog = `
+                    let a = 3;
+                    const b = a;
+                `
+
+                // When
+                const parsed = parse_js_file(prog, 1)
+
+                // Then
+                expect(parsed.code).to.deep.equal([
+                    'let a = 3;',
+                    'const b = a;'
                 ])
                 expect(parsed.created).to.deep.equal([])
                 expect(parsed.methods).to.deep.equal([])

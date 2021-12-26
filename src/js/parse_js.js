@@ -3,9 +3,9 @@ import {
 	getTypeOfBlock, 
 	getFunctionParameters, 
 	getName, 
-	modifyContent, 
+	adaptContent, 
 	getFunctionContent, 
-	getContentOfRange 
+	getContentOfRange
 } from "./utils.js"
 
 const handleDeclarationFunction = (block, prog, methods, data) => {
@@ -28,21 +28,26 @@ const handleDeclarationFunction = (block, prog, methods, data) => {
 	return methods
 }
 
-const handleDeclarationVariable = (block, prog, depth, created, data, code, local_var) => {
-	let name, content;
+const handleDeclarationVariable = (block, prog, depth, created, methods, data, code, local_var) => {
+	let name, tokens, code_line, identifier;
+
 	name = getName(block)
-	content = modifyContent(block, prog, depth)
-	if (!depth) {	
-		if (block.declarations[0].init) {
-			let range = block.declarations[0].init.range
-			// Si la valeur de droite ne contient pas de variable, mettre directement dans data
-			created.push(`this.${name} = ${getContentOfRange(range, prog)}`)
-		}
-		data.push(name)
-	} else {
-		code.push(content)
-		local_var.push(name)
+	code_line = getContentOfRange(block.range, prog)
+	tokens = esprima.tokenize(code_line, {range: true})
+	if (block.declarations[0].init) {
+		identifier = !depth ? [...data, name] : data
+		code_line = adaptContent(code_line, tokens, methods, identifier, depth)
 	} 
+
+	if (!depth) {
+		data.push(name)	
+		if (block.declarations[0].init) created.push(code_line)
+	}
+	else {
+		code.push(code_line)
+		local_var.push(name)
+	}
+
 	return {
 		local_var,
 		code,
@@ -51,14 +56,17 @@ const handleDeclarationVariable = (block, prog, depth, created, data, code, loca
 	}
 }
 
-const handleAssignementVariable = (block, prog, created, data, code, local_var) => {
+const handleAssignementVariable = (block, prog, depth, created, methods, data, code, local_var) => {
+	let identifier, name, code_line, tokens;
+	name = block.expression.left.name
+	identifier = !depth ? [...data, name] : data
+	code_line = getContentOfRange(block.range, prog)
+	tokens = esprima.tokenize(code_line, {range: true})
+	code_line = adaptContent(code_line, tokens, methods, identifier, depth)
 	if (local_var.includes(block.expression.left.name)) {
-		let range = block.range
-		code.push(getContentOfRange(range, prog))
+		code.push(code_line)
 	} else if (data.includes(block.expression.left.name)) {
-		let range = block.expression.right.range
-		let name = `this.${block.expression.left.name}`
-		created.push(`${name} = ${getContentOfRange(range, prog)}`)
+		created.push(code_line)
 	} else {
 		throw new Error("Variable inconnu")
 	}
@@ -81,14 +89,14 @@ const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], c
 			methods = handleDeclarationFunction(block, prog, methods, data)
 		}
 		else if (type === "declarationVariable") {
-			res = handleDeclarationVariable(block, prog, depth, created, data, code, local_var)
+			res = handleDeclarationVariable(block, prog, depth, created, methods, data, code, local_var)
 			code = res.code
 			local_var = res.local_var
 			data = res.data
 			created = res.created
 		}
 		else if (type === "assignementVariable") {
-			res = handleAssignementVariable(block, prog, created, data, code, local_var)
+			res = handleAssignementVariable(block, prog, depth, created, methods, data, code, local_var)
 			code = res.code
 			local_var = res.local_var
 			data = res.data
@@ -104,16 +112,7 @@ const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], c
 	}
 }
 
-const prog = `
-	const a = () => {
-		let b = 3;
-		function c(d,e){
-			d = 3;
-			e = d;
-		}
-	}
-`
-
-//console.log(JSON.stringify(parse_js_file(prog), undefined, 4))
+//let r = parse_js_file(prog_, 0)
+//console.log(JSON.stringify(r,  undefined, 4))
 
 export default parse_js_file

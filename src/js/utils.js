@@ -61,11 +61,43 @@ const getFunctionContent = (block, prog) => {
     return getContentOfRange(range, prog)
 }
 
+const adaptContent = (prog, tokens, methods, identifier, depth) => {
+    let i, range, name, sanitaze, last;
+
+    methods.forEach(method => { identifier.push(method.name) })
+
+    i = 0
+    sanitaze = ""
+
+    for (i; i < tokens.length && !depth; i++) {
+        if (tokens[i].type === "Identifier") {
+            last = tokens[i].range[1]
+            name = tokens[i].value
+            sanitaze += `this.${name}`
+            break
+        }
+    }
+    i+=1
+
+    for (i; i < tokens.length; i++) {
+        if (identifier.includes(tokens[i].value)) {
+            range = tokens[i].range
+            name = tokens[i].value
+            sanitaze += `${getContentOfRange([last, range[0]], prog)}this.${name}`
+            last = tokens[i].range[1]
+        }
+    }
+    sanitaze += getContentOfRange([last, prog.length], prog)
+    
+    return sanitaze;
+}
+
 export {
     getTypeOfBlock,
     getFunctionParameters,
     getName,
     modifyContent,
     getFunctionContent,
-    getContentOfRange
+    getContentOfRange,
+    adaptContent
 }
