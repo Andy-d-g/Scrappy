@@ -1,8 +1,10 @@
 const isDeclarationFunction = (block) => {
 	if (block.type === "FunctionDeclaration") return true
     else if (block.type === "VariableDeclaration") {
-        let type = block.declarations[0].init.type
-        return type === "ArrowFunctionExpression" || type === "FunctionExpression"
+        if (block.declarations[0].init) {
+            let type = block.declarations[0].init.type
+            return type === "ArrowFunctionExpression" || type === "FunctionExpression"
+        }
     }
     return false;
 }
@@ -14,10 +16,16 @@ const isCallFunction = (block) => {
 
 const isDeclarationVariable = (block) => block.type === "VariableDeclaration"
 
+const isAssignementVariable = (block) => {
+    if (block.type === "ExpressionStatement") return block.expression.type === "AssignmentExpression"
+    return false
+}
+
 const getTypeOfBlock = (block) => {
 	if (isDeclarationFunction(block)) return "declarationFunction"
     else if (isCallFunction(block)) return "callFunction"
     else if (isDeclarationVariable(block)) return "declarationVariable"
+    else if (isAssignementVariable(block)) return "assignementVariable"
     return "unknow"
 }
 
@@ -45,17 +53,20 @@ const modifyContent = (block, prog, depth) => {
 	return `this.${prog.slice(rangeName[1]-1, block.range[1])}`
 }
 
+const getContentOfRange = (range, prog) => prog.slice(range[0], range[1])
+
 const getFunctionContent = (block, prog) => {
     let range = block.type === "FunctionDeclaration"
     ? block.body.range
     : block.declarations[0].init.body.range
-	return prog.slice(range[0], range[1])
+    return getContentOfRange(range, prog)
 }
 
-export default {
+export {
     getTypeOfBlock,
     getParams,
     getName,
     modifyContent,
-    getFunctionContent
+    getFunctionContent,
+    getContentOfRange
 }
