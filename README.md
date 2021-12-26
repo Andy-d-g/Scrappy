@@ -28,7 +28,7 @@ Depuis votre terminal de commande :
 $ git clone https://github.com/Andy-d-g/HTML_scrappy.git
 
 # Aller dans le repertoire src
-$ cd HTML_scrappy/src
+$ cd HTML_scrappy
 
 # Installer les package
 $ npm run start
