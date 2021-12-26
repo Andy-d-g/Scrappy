@@ -3,7 +3,7 @@
     <br>
     <a href=""><img src="stealing-data.png" alt="Favicon" width="200"></a>
     <br>
-    HTML Scrappy
+    Scrappy
     <br>
   </h1>
 </div>
@@ -25,10 +25,10 @@ Depuis votre terminal de commande :
 
 ```bash
 # Cloner le repertoire
-$ git clone https://github.com/Andy-d-g/HTML_scrappy.git
+$ git clone https://github.com/Andy-d-g/Scrappy.git
 
 # Aller dans le repertoire src
-$ cd HTML_scrappy
+$ cd Scrappy
 
 # Installer les package
 $ npm run start
