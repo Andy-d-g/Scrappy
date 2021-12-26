@@ -1,7 +1,5 @@
 import { expect } from "chai"
-import esprima from "esprima"
 import parse_js_file from "../../src/js/parse_js.js"
-import utils from "../../src/js/utils.js"
 
 describe("JS rules", () => {
     describe("Variable", () => {
@@ -13,7 +11,6 @@ describe("JS rules", () => {
             const parsed = parse_js_file(js)
 
             // Then
-            console.log(parsed)
             expect(parsed.code).to.deep.equal([])
             expect(parsed.created).to.deep.equal([
                 'this.a = 3'
@@ -32,7 +29,6 @@ describe("JS rules", () => {
             const parsed = parse_js_file(js)
 
             // Then
-            console.log(parsed)
             expect(parsed.code).to.deep.equal([])
             expect(parsed.created).to.deep.equal([
                 'this.a = 3'
@@ -45,43 +41,125 @@ describe("JS rules", () => {
         })
     })
     describe("Function", () => {
-        it("simple function", () => {
-            // Given
-            const js = "const a = () => {}"
-
-            // When
-            const parsed = parse_js_file(js)
-
-            // Then
-            expect(parsed).to.deep.equal({ 
-                code: [],
-                created: [],
-                methods: [
-                    'a(){}'
-                ],
-                data: [],
-                depth: 0
+        describe("Simple function", () => {
+            describe("Without parameters", () => {
+                it("simple function variable", () => {
+                    // Given
+                    const js = "const a = () => {}"
+        
+                    // When
+                    const parsed = parse_js_file(js)
+        
+                    // Then
+                    expect(parsed).to.deep.equal({ 
+                        code: [],
+                        created: [],
+                        methods: [
+                            'a(){}'
+                        ],
+                        data: [],
+                        depth: 0
+                    })
+                })
+                it("simple function declaration", () => {
+                    // Given
+                    const js = `function a() {}`
+        
+                    // When
+                    const parsed = parse_js_file(js)
+        
+                    // Then
+                    expect(parsed).to.deep.equal({ 
+                        code: [],
+                        created: [],
+                        methods: [
+                            'a(){}'
+                        ],
+                        data: [],
+                        depth: 0
+                    })
+                })
+            })
+            describe("With parameters", () => {
+                it("simple function variable", () => {
+                    // Given
+                    const js = "const a = (x,y) => {}"
+        
+                    // When
+                    const parsed = parse_js_file(js)
+        
+                    // Then
+                    expect(parsed).to.deep.equal({ 
+                        code: [],
+                        created: [],
+                        methods: [
+                            'a(x, y){}'
+                        ],
+                        data: [],
+                        depth: 0
+                    })
+                })
+                it("simple function declaration", () => {
+                    // Given
+                    const js = `function a(x, y) {}`
+        
+                    // When
+                    const parsed = parse_js_file(js)
+        
+                    // Then
+                    expect(parsed).to.deep.equal({ 
+                        code: [],
+                        created: [],
+                        methods: [
+                            'a(x, y){}'
+                        ],
+                        data: [],
+                        depth: 0
+                    })
+                })
             })
         })
-        it("imbricate function ", () => {
-            // Given
-            const js = `
-            const a = () => { 
-                const b = () => {}
-            }`
+        describe("Imbricate function", () => {
+            it("const a = () => {}", () => {
+                // Given
+                const js = `
+                const a = () => { 
+                    const b = () => {}
+                }`
 
-            // When
-            const parsed = parse_js_file(js)
-            
-            // Then
-            expect(parsed.code).to.deep.equal([])
-            expect(parsed.created).to.deep.equal([])
-            expect(parsed.methods).to.deep.equal([
-                'b(){}',
-                'a(){}'
-            ])
-            expect(parsed.data).to.deep.equal([])
-            expect(parsed.depth).to.equal(0)
+                // When
+                const parsed = parse_js_file(js)
+                
+                // Then
+                expect(parsed.code).to.deep.equal([])
+                expect(parsed.created).to.deep.equal([])
+                expect(parsed.methods).to.deep.equal([
+                    'b(){}',
+                    'a(){}'
+                ])
+                expect(parsed.data).to.deep.equal([])
+                expect(parsed.depth).to.equal(0)
+            })
+            it("function a() {}", () => {
+                // Given
+                const js = `
+                function a() { 
+                    function b() {}
+                }`
+
+                // When
+                const parsed = parse_js_file(js)
+                
+                // Then
+                expect(parsed.code).to.deep.equal([])
+                expect(parsed.created).to.deep.equal([])
+                expect(parsed.methods).to.deep.equal([
+                    'b(){}',
+                    'a(){}'
+                ])
+                expect(parsed.data).to.deep.equal([])
+                expect(parsed.depth).to.equal(0)
+            })
         })
     })
 })
