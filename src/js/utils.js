@@ -1,12 +1,13 @@
-const isDeclarationFunction = (block) => {
-	if (block.type === "FunctionDeclaration") return true
-    else if (block.type === "VariableDeclaration") {
+const isDeclarationFunction = (block) => block.type === "FunctionDeclaration";
+
+const isArrowFunction = (block) => {
+    if (block.type === "VariableDeclaration") {
         if (block.declarations[0].init) {
             let type = block.declarations[0].init.type
-            return type === "ArrowFunctionExpression" || type === "FunctionExpression"
+            return type === "FunctionExpression" || type === "ArrowFunctionExpression"
         }
     }
-    return false;
+    return false
 }
 
 const isCallFunction = (block) => {
@@ -21,11 +22,15 @@ const isAssignementVariable = (block) => {
     return false
 }
 
+const isConditionStatement = (block) => block.type === "IfStatement"
+
 const getTypeOfBlock = (block) => {
 	if (isDeclarationFunction(block)) return "declarationFunction"
+    if (isArrowFunction(block)) return "arrowFunction"
     else if (isCallFunction(block)) return "callFunction"
     else if (isDeclarationVariable(block)) return "declarationVariable"
     else if (isAssignementVariable(block)) return "assignementVariable"
+    else if (isConditionStatement(block)) return "conditionStatement"
     return "unknow"
 }
 
@@ -53,13 +58,6 @@ const modifyContent = (block, prog, depth) => {
 }
 
 const getContentOfRange = (range, prog) => prog.slice(range[0], range[1])
-
-const getFunctionContent = (block, prog) => {
-    let range = block.type === "FunctionDeclaration"
-    ? block.body.range
-    : block.declarations[0].init.body.range
-    return getContentOfRange(range, prog)
-}
 
 const adaptContent = (prog, tokens, methods, identifier, depth) => {
     let i, range, name, sanitaze, last;
@@ -97,7 +95,6 @@ export {
     getFunctionParameters,
     getName,
     modifyContent,
-    getFunctionContent,
     getContentOfRange,
     adaptContent
 }

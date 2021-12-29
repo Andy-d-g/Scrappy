@@ -15,36 +15,36 @@ describe("Detection of type of block", () => {
                 it("const a = () => {}", () => {
                     const prog = `const a = () => {}`
                     const block = esprima.parse(prog).body[0]
-                    expect(getTypeOfBlock(block)).to.be.equal("declarationFunction")
+                    expect(getTypeOfBlock(block)).to.be.equal("arrowFunction")
                 })
                 it("const b = function() {}", () => {
                     const prog = `const b = function() {}`
                     const block = esprima.parse(prog).body[0]
-                    expect(getTypeOfBlock(block)).to.be.equal("declarationFunction")
+                    expect(getTypeOfBlock(block)).to.be.equal("arrowFunction")
                 })
             })
             describe("let", () => {
                 it("let a = () => {}", () => {
                     const prog = `let a = () => {}`
                     const block = esprima.parse(prog).body[0]
-                    expect(getTypeOfBlock(block)).to.be.equal("declarationFunction")
+                    expect(getTypeOfBlock(block)).to.be.equal("arrowFunction")
                 })
                 it("let b = function() {}", () => {
                     const prog = `let b = function() {}`
                     const block = esprima.parse(prog).body[0]
-                    expect(getTypeOfBlock(block)).to.be.equal("declarationFunction")
+                    expect(getTypeOfBlock(block)).to.be.equal("arrowFunction")
                 })
             })
             describe("var", () => {
                 it("var a = () => {}", () => {
                     const prog = `var a = () => {}`
                     const block = esprima.parse(prog).body[0]
-                    expect(getTypeOfBlock(block)).to.be.equal("declarationFunction")
+                    expect(getTypeOfBlock(block)).to.be.equal("arrowFunction")
                 })
                 it("var b = function() {}", () => {
                     const prog = `var b = function() {}`
                     const block = esprima.parse(prog).body[0]
-                    expect(getTypeOfBlock(block)).to.be.equal("declarationFunction")
+                    expect(getTypeOfBlock(block)).to.be.equal("arrowFunction")
                 })
             })
         })

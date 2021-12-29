@@ -7,7 +7,7 @@ describe("JS function rules", () => {
             // Given
             const prog = "const a = () => {}"
     
-                // When
+            // When
             const parsed = parse_js_file(prog)
     
             // Then

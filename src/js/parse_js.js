@@ -4,29 +4,8 @@ import {
 	getFunctionParameters, 
 	getName, 
 	adaptContent, 
-	getFunctionContent, 
 	getContentOfRange
 } from "./utils.js"
-
-const handleDeclarationFunction = (block, prog, methods, data) => {
-	let res, content, name, params, parsed;
-	parsed = []
-	content = getFunctionContent(block, prog)
-	name = getName(block)
-	params = getFunctionParameters(block)
-	if (content !== '{}') {
-		content = getContentOfRange([1, content.length-1], content)
-		res = parse_js_file(content, 1, [], methods, data, [], params)
-		methods = res.methods
-		parsed = res.code
-	}
-	methods.push({
-		name,
-		params,
-		code: parsed
-	})
-	return methods
-}
 
 const handleDeclarationVariable = (block, prog, depth, created, methods, data, code, local_var) => {
 	let name, tokens, code_line, identifier;
@@ -78,15 +57,29 @@ const handleAssignementVariable = (block, prog, depth, created, methods, data, c
 	}
 }
 
-const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], code = [], params = []) => {
-	let type;
-	let res;
-	let local_var = [...params]; 
-	const tree = esprima.parse(prog, {range: true})
-	tree.body.forEach(block => {
+const _parse_js_file = (prog, tree, depth = 0, created = [], methods = [], data = [], code = [], params = []) => {
+	let type, res;
+	let name, local_var;
+	let sub_tree, sub_prog;
+	local_var = [...params];
+	tree.forEach((block) => {
 		type = getTypeOfBlock(block)
-		if (type === "declarationFunction") {
-			methods = handleDeclarationFunction(block, prog, methods, data)
+		if (type === "declarationFunction" || type === "arrowFunction") {
+			sub_prog = getContentOfRange(block.range, prog)
+			sub_tree = esprima.parse(sub_prog, {range: true})
+			sub_tree = type === "arrowFunction" 
+			? sub_tree = sub_tree.body[0].declarations[0].init.body.body
+			: sub_tree = sub_tree.body[0].body.body
+			params = getFunctionParameters(block)
+			name = getName(block)
+			res = _parse_js_file(sub_prog, sub_tree, 1, created, methods, data, [], params)
+			data = res.data
+			created = res.created
+			methods.push({
+				name,
+				params,
+				code: res.code
+			})
 		}
 		else if (type === "declarationVariable") {
 			res = handleDeclarationVariable(block, prog, depth, created, methods, data, code, local_var)
@@ -102,6 +95,9 @@ const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], c
 			data = res.data
 			created = res.created
 		}
+		else if (type == "conditionStatement") {
+			console.log("condition")
+		}
 	})
 	return {
 		code,
@@ -112,7 +108,9 @@ const parse_js_file = (prog, depth = 0, created = [], methods = [], data = [], c
 	}
 }
 
-//let r = parse_js_file(prog_, 0)
+const parse_js_file = (prog, depth) => _parse_js_file(prog, esprima.parse(prog, {range: true}).body, depth)
+
+//let r = parse_js_file(p0, 1)
 //console.log(JSON.stringify(r,  undefined, 4))
 
 export default parse_js_file
