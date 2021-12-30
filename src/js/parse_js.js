@@ -12,9 +12,10 @@ const handleDeclarationVariable = (block, prog, depth, created, methods, data, c
 
 	name = getName(block)
 	code_line = getContentOfRange(block.range, prog)
-	tokens = esprima.tokenize(code_line, {range: true})
+
 	if (block.declarations[0].init) {
 		identifier = !depth ? [...data, name] : data
+		tokens = esprima.tokenize(code_line, {range: true})
 		code_line = adaptContent(code_line, tokens, methods, identifier, depth)
 	} 
 
@@ -57,6 +58,44 @@ const handleAssignementVariable = (block, prog, depth, created, methods, data, c
 	}
 }
 
+const handleConditionStatement = (block, prog, depth, created, methods, data, code, local_var, cond_depth = 0) => {
+	let sub_prog, sub_tree;
+	let res, cond, range;
+	// if 
+	sub_tree = block.consequent.body
+	res = _parse_js_file(prog, sub_tree, depth, created, methods, data, code, local_var)
+	methods = res.methods
+	data = res.data
+	created = res.created
+	// check condition
+	/*
+	code = !cond_depth
+	? `if (){${res.code}}`
+	: `else if () {${res.code}}`
+	*/
+	/*
+	if (block.alternate) {
+		if (block.alternate.type === "IfStatement") {
+			// else if 
+			cond = handleConditionStatement(block.alternate, prog, depth, created, methods, data, code, local_var, 1)
+		} else {
+			// else
+			sub_prog = getContentOfRange(block.alternate.range, prog)
+			sub_tree = block.alternate.body
+			res = _parse_js_file(sub_prog, sub_tree, depth, created, methods, data, code, local_var)
+		}
+	}
+	*/
+
+	return {
+		code,
+		created,
+		methods,
+		data,
+		depth
+	}
+}
+
 const _parse_js_file = (prog, tree, depth = 0, created = [], methods = [], data = [], code = [], params = []) => {
 	let type, res;
 	let name, local_var;
@@ -83,6 +122,7 @@ const _parse_js_file = (prog, tree, depth = 0, created = [], methods = [], data 
 		}
 		else if (type === "declarationVariable") {
 			res = handleDeclarationVariable(block, prog, depth, created, methods, data, code, local_var)
+			//console.log(res)
 			code = res.code
 			local_var = res.local_var
 			data = res.data
@@ -95,9 +135,16 @@ const _parse_js_file = (prog, tree, depth = 0, created = [], methods = [], data 
 			data = res.data
 			created = res.created
 		}
+		/*
 		else if (type == "conditionStatement") {
-			console.log("condition")
+			console.log(code)
+			res = handleConditionStatement(block, prog, depth, created, methods, data, code, local_var)
+			code = res.code
+			methods = res.methods
+			data = res.data
+			created = res.created
 		}
+		*/
 	})
 	return {
 		code,
@@ -109,6 +156,12 @@ const _parse_js_file = (prog, tree, depth = 0, created = [], methods = [], data 
 }
 
 const parse_js_file = (prog, depth) => _parse_js_file(prog, esprima.parse(prog, {range: true}).body, depth)
+
+const p0 = `
+	const a = () => {
+
+	}
+`
 
 //let r = parse_js_file(p0, 1)
 //console.log(JSON.stringify(r,  undefined, 4))
