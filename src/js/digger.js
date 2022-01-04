@@ -1,5 +1,19 @@
 import esprima from "esprima"
 
+const back = (root, road, behind) => {
+    for (let i = 0; i < road.length-behind; i++) {
+        root = isNaN(road[i]) ? root[road[i]] : root[parseInt(road[i], 10)]
+    }
+    return root
+}
+
+const exist = (array, name) => {
+	for (let i = 0; i < array.length; i++) {
+		if (array[i].name === name) return true
+	}
+	return false
+}
+
 const eqArray = (a,b) => {
 	if (a.length !== b.length) return false
 	for (let i = 0; i < a.length; i++) {
@@ -10,102 +24,78 @@ const eqArray = (a,b) => {
 
 const findByName = (array, value, range) => {
 	for (let i = 0; i < array.length; i++) {
-		if (array[i]['name'] === value) {
-			console.log(value)
-			if (!eqArray(range, array[i]['range'])) return true
-		}
+		if (array[i]['name'] === value && !eqArray(range, array[i]['range_name'])) return true
 	}
 	return false
 }
 
-const _dig = (prog, root, tree, path, depth, save) => {
-	let current, name, range;
-	Object.keys(tree).forEach(branch => {
+const _dig = (root, tree, depth, road, save, local_var) => {
+    let name, range_name, range, range_full, sub_tree;
+    for (let branch in tree) {
 		if (branch === "type" && tree[branch] === "Identifier") {
 			name = tree['name']
 			range = tree['range']
-			if (findByName(save['variable'], name, range)) {
-				save['call'].push({
-					name,
-					range,
-					depth
-				})
-			}
-			else if (findByName(save['function'], name, range)) {
-				save['call'].push({
-					name,
-					range,
-					depth
-				})
+			if (!exist(local_var, name)) {
+				if (findByName(save['variable'], name, range) || findByName(save['function'], name, range)) { save['call'].push({ name, range, depth }) }
 			}
 		}
-		else if (branch === "type" && tree[branch] === "VariableDeclarator") {
-			name = tree['id']['name']
-			range = tree['id']['range']
-			if (tree['init']) {
-				if (tree['init']['type'] === "ArrowFunctionExpression" || tree['init']['type'] === "FunctionExpression") {
-					save['function'].push({
-						name,
-						range
-					})
-				}
-			} 
-			else {
-				if (!depth) {
-					save['variable'].push({
-						name,
-						range
-					})
-				}
-			}
-		}
+        else if (branch === "type" && tree[branch] === "VariableDeclarator") {
+            sub_tree = back(root, road, 2)
+            name = tree['id']['name']
+            range_name = tree['id']['range']
+            range_full = sub_tree['range']
+            if (tree['init']) {
+                if (tree['init']['type'] === "ArrowFunctionExpression" || tree['init']['type'] === "FunctionExpression") {
+                    save['function'].push({ name, range_name, range_full })
+                }
+                else {
+                    if (!depth) { save['variable'].push({ name, range_name, range_full }) }
+                    else { local_var.push({ name, range_name, range_full }) }
+                }
+            } else {
+                if (!depth) { save['variable'].push({ name, range_name, range_full }) }
+				else { local_var.push({ name, range_name, range_full }) }
+            }
+        }
 		else if (branch === "type" && tree[branch] === "FunctionDeclaration") {
 			name = tree['id']['name']
-			range = tree['id']['range']
-			save['function'].push({
-				name,
-				range
-			})
+			range_name = tree['id']['range']
+			range_full = tree['range']
+			save['function'].push({ name, range_name, range_full })
 		}
-		else if (Array.isArray(tree[branch])) {
-			tree[branch].forEach((_, index) => {
-				current = path
-				current.push(branch)
-				current.push(index)
-				save = _dig(prog, root, tree[branch][index], current, depth, save)
-			})
-		}
-		else if (typeof tree[branch] === 'object' && tree[branch] !== null) {
-			if (tree['type'] === "FunctionDeclaration" || tree['type'] === "ArrowFunctionExpression" || tree['type'] === "FunctionExpression") {
-				save = _dig(prog, root, tree[branch], path, 1, save)
-			} else {
-				save = _dig(prog, root, tree[branch], path, depth, save)
-			}
-		}
-	})
-	return save;
+        else if (tree[branch] !== null && typeof(tree[branch])=="object") {
+            if ((tree['type'] === "FunctionDeclaration" || tree['type'] === "ArrowFunctionExpression" || tree['type'] === "FunctionExpression") && branch === "body") {
+                save = _dig(root, tree[branch], depth+1, [...road, branch], save, []);
+            }
+            else { save = _dig(root, tree[branch], depth, [...road, branch], save, local_var); }
+        }
+    }
+    return save
 }
 
-const dig = (prog, tree, depth = 0) => _dig(prog, tree, tree, [], depth, {function: [], variable: [], call: []})
 
-
-const p0 = `
-	let x;
-	const a = () => {}
-	const b = function() {
-		let v;
-	}
-	function c() {
-		let v = x;
-		let y = a()
-		b()
-	}
-	c()
+const program = `
+let x;
+const a = () => {}
+const b = function() {
+    let v;
+}
+function c() {
+    let v = x;
+    let y = a()
+    b()
+}
+c()
+x.addEventlistener("event", function(){
+    let t = x
+    a()
+})
 `
 
+const tree = esprima.parse(program, {range: true})
+
+const dig = (tree, depth = 0) => _dig(tree, tree, depth, [], {function: [], variable: [], call: []}, []) 
+
+//console.log(dig(tree))
+
 export default dig
-
-const tree = esprima.parse(p0, {range: true})
-
-console.log(dig(p0, tree))
-
