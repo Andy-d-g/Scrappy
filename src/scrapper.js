@@ -23,8 +23,38 @@ const merge = (current, updates) => {
     return current;
 }
 
+const mergeStylesSheets = (styles_sheet) => {
+    let obj = {}
+    styles_sheet.forEach(s => {
+        s.data.forEach(_css => {
+            obj = merge(obj, parse_css_file(_css))
+        })
+    })
+    return obj
+}
+
+
+const getStylesSheets = async (page) => page.$eval('html', (doc) => {
+    const stylesSheets = [...doc.parentNode.styleSheets]
+    let sheet = []
+    for (let i = 0; i < stylesSheets.length; i++) {
+        try {
+            [stylesSheets[i].cssRules].forEach((rules_list) => {
+                let arr = {
+                    data: [], 
+                    href: stylesSheets[i].href
+                }
+                for (let a = 0; a < rules_list.length; a++) arr.data.push(rules_list[a].cssText)
+                sheet.push(arr)
+            })
+        } catch (err) {}
+    }
+    return sheet;
+})
+
 const scrappy = async (url, selector) => {
     try {
+        let obj;
         let html, css, styles_sheet;
         const browser = await puppeteer.launch({
             headless: true
@@ -43,38 +73,10 @@ const scrappy = async (url, selector) => {
         html = await page.$eval(selector, doc => doc.outerHTML)
         html = beautify.html(html, { indent_size: 4, space_in_empty_paren: true })
 
-        styles_sheet = await page.$eval('html', (doc) => {
-            const stylesSheets = [...doc.parentNode.styleSheets]
-            let sheet = []
-    
-            for (let i = 0; i < stylesSheets.length; i++) {
-                try {
-                    [stylesSheets[i].cssRules].forEach((rules_list) => {
-                        let arr = {
-                            data: [], 
-                            href: stylesSheets[i].href
-                        }
-                        for (let a = 0; a < rules_list.length; a++) arr.data.push(rules_list[a].cssText)
-                        sheet.push(arr)
-                    })
-                } catch (err) {}
-            }
-            return sheet;
-        })
-    
-        let obj = {}
-
-        styles_sheet.forEach(s => {
-            s.data.forEach(_css => {
-                obj = merge(obj, parse_css_file(_css))
-            })
-        })
-
+        styles_sheet = await getStylesSheets(page)
+        obj = mergeStylesSheets(styles_sheet)
         css = obj_to_css(obj)
-
-        uncss(html, {raw: css}, (error, output) => {
-            create_component(html, output)
-        })
+        uncss(html, {raw: css}, (error, output) => create_component(html, output))
 
         await browser.close();
 
