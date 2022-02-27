@@ -1,8 +1,5 @@
 import esprima from "esprima"
 import { digFunctions, digVariables, digCalls, digSelfExec } from "./dig.js"
-import test from "./example.js"
-import beautify from 'js-beautify'
-import fs from 'fs'
 import _ from "lodash"
 
 const THIS = "self."
@@ -181,7 +178,9 @@ const getProgramStructure = (program) => {
     program = insertKeywordInProgram(program, list_variable, list_function, list_call)
     program = modifyProgramForSelfExecFunction(program)
 
-    created = `const ${THIS.slice(0,-1)} = this; ${program}`
+    program = `const ${THIS.slice(0,-1)} = this; ${program}`
+    
+    created = _.replace(program, /(\r?\n){2,}/g, '')
     data = list_global_var
     methods = list_function
 
@@ -192,7 +191,8 @@ const getProgramStructure = (program) => {
     }
 }
 
-const vanillaToVue = (info) => {
+const vanillaToVue = (program) => {
+    const info = getProgramStructure(program)
     let created = "", methods = "", data = ""
     info['data'].forEach(v => {
         data += `${v.name}: ${v.value ? v.value : "\"\""},\n`
@@ -203,14 +203,13 @@ const vanillaToVue = (info) => {
     })
     methods = `methods: {\n${methods}\n}`
     created = `created() {${info['created']}}`
-    fs.writeFileSync('./out/out.vue', `<script>\n${beautify.js(`
-    export default {
+    return `export default {
         name: '',
         props: {},
         ${created},
         ${data},
         ${methods}
-    }`)}\n</script>`, () => {console.log('Fichier créer avec succès !')})
+    }`
 }
 
-vanillaToVue(getProgramStructure(test))
+export default vanillaToVue

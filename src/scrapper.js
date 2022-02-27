@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer';
-import beautify from 'js-beautify'
 import cleanCSS from './css/cleanCSS.js'
 import { createComponent, objToCSS, merge } from './utils.js'
-import fs from 'fs'
+import axios from 'axios'
+import vanillaToVue from './js/vanillaToVue.js'
 
 const HEADLESS = true
 
@@ -54,7 +54,6 @@ const getHTMLJSCSS = async (url, selector) => {
         await page.goto(url);
         await page.waitForSelector(selector)
         html = await page.$eval(selector, doc => doc.outerHTML)
-        html = beautify.html(html, { indent_size: 4, space_in_empty_paren: true })
 
         js = await getScript(page)
         css = await getStylesSheets(page)
@@ -100,7 +99,7 @@ const scrappy = async (url, selector) => {
         html_js_css = await getHTMLJSCSS(url, selector)
         
         html = html_js_css.html
-        js = html_js_css.js
+        js = html_js_css.js // url
         styles_sheets = html_js_css.css
         obj = {}
 
@@ -111,6 +110,10 @@ const scrappy = async (url, selector) => {
             sub_css = await filtreCSS(url, selector, resolution, styles_sheets)
             obj = merge(obj, sub_css)
         }
+        
+
+        js = await axios.get(js)
+        js = vanillaToVue(js.data)
         
         css = objToCSS(obj)
         createComponent(html, css, js)
