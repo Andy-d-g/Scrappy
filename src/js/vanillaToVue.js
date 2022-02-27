@@ -1,24 +1,27 @@
 import esprima from "esprima"
-import {dig_function, dig_variable, get_call, get_self_exec} from "./dig.js"
+import { digFunctions, digVariables, digCalls, digSelfExec } from "./dig.js"
 import test from "./example.js"
 import beautify from 'js-beautify'
 import fs from 'fs'
+import _ from "lodash"
 
 const THIS = "self."
 
-const removecomments = (string) => string.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g,'').trim();
+const removeComments = (string) => string.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g,'').trim();
 
-const replacebyspace = (string, range) => string.slice(0, range[0]) + Array(range[1] - range[0]).fill(" ").join("") + string.slice(range[1])
+const replaceBySpace = (string, range) => string.slice(0, range[0]) + Array(range[1] - range[0]).fill(" ").join("") + string.slice(range[1])
 
-const addcode = (string, range, code) => string.slice(0, range[0]) + code + string.slice(range[0])
+const insertKeyword = (string, range, code) => string.slice(0, range[0]) + code + string.slice(range[0])
 
-const getcontentofrange = (string, range) => string.slice(range[0], range[1])
+const getContentOfRange = (string, range) => string.slice(range[0], range[1])
 
-const objtoarray = (obj, property) => obj.map(o => o[property])
+const objToArray = (obj, property) => obj.map(o => o[property])
 
-const getparameters = (obj, property) => objtoarray(obj.map(o => o['name'] ? o : o['left']), property)
+const getParameters = (obj, property) => objToArray(obj.map(o => o['name'] ? o : o['left']), property)
 
-const cleanfunction = (func) => getcontentofrange(func, [func.indexOf('{')+1, func.length-1])
+const getBodyFunction = (func) => getContentOfRange(func, [func.indexOf('{')+1, func.length-1])
+
+const insertThisKeyword = (program) => `const ${THIS.slice(0,-1)} = this;${program}` 
 
 const eqArray = (a,b) => {
 	if (a.length !== b.length) return false
@@ -28,94 +31,168 @@ const eqArray = (a,b) => {
 	return true
 }
 
-const parse_js_file = (prog) => {
-    let i, j;
-    let list_variable, list_function, list_call, list_calls, list_self_exec;
-    let tree, original, duplicate;
-    let data = [], methods = [], created;
+const extractFunctions = (program) => {
+    const tree = esprima.parse(program, { range: true })
+    return digFunctions(tree, tree).map(f => {
+        let code = getContentOfRange(program, f.range_full)
+        return {...f, code}
+    })
+}
 
-    original = prog = removecomments(prog)
+const extractVariables = (program) => {
+    const tree = esprima.parse(program, { range: true })
+    return digVariables(tree, tree)
+}
 
-    tree = esprima.parse(prog, {range: true})
-    list_function = dig_function(tree, tree)
+const deleteFunctionsInProgram = (program, ranges) => {
+    ranges.forEach(r => program = replaceBySpace(program, r))
+    return program
+}
+
+const getFunctionCalls = (list_function, list_global_var) => {
+    let list_calls = []
     list_function.forEach(f => {
-        f.code = getcontentofrange(original, f.range_full)
-        prog = replacebyspace(prog, f.range_full)
-    })
-
-    tree = esprima.parse(prog, {range: true})
-    list_variable = dig_variable(tree, tree)
-
-    list_calls = []
-    list_function.forEach(f => {
-        tree = esprima.parse(f.code, {range: true})
-        list_call = get_call(tree, tree, objtoarray(list_variable, 'name'), objtoarray(list_function, 'name'), getparameters(f.params, 'name'))
-        list_calls = [...list_calls, ...list_call]
-        for (let call of list_call.reverse()) {
-            f.code = addcode(f.code, call.range, THIS)
+        let tree = esprima.parse(f.code, {range: true})
+        let listOf = {
+            variables: objToArray(list_global_var, 'name'),
+            functions: objToArray(list_function, 'name'),
+            parameters: getParameters(f.params, 'name')
         }
-        f.code = cleanfunction(f.code)
-        f.code = `const ${THIS.slice(0,-1)} = this;${f.code}` 
-        methods.push({ name: f.name, async: f.async, params: f.params.length ? getcontentofrange(original, f.range_params) : "", code: f.code })
+        list_calls.push(digCalls(tree, tree, listOf.variables, listOf.functions, listOf.parameters))
     })
-    
+    return list_calls
+}
 
-    list_variable.reverse().forEach((v, i) => {
-        if (objtoarray(list_calls, 'name').includes(v.name)) {
-            if (v.init_type === "None" || v.init_type === "Literal" ) {
-                prog = replacebyspace(prog, v.range_full)
-                data.push({ name: v.name, value: v.body })
-            }
-            else {
-                prog = replacebyspace(prog, [v.range_full[0], v.range_name[0]])
-                prog = addcode(prog, v.range_name, THIS)
-                v.range_name[0] += THIS.length * (list_variable.length-i); 
-                v.range_name[1] += THIS.length * (list_variable.length-i);
-                data.push({ name: v.name, value: "" })
-            }
-        }
-    })
-
-    tree = esprima.parse(prog, {range: true})
-    list_call = get_call(tree, tree, objtoarray(list_variable, 'name'), objtoarray(list_function, 'name'))
-
-    for (i = 0; i < list_call.length; i++) {
-        for (j = 0; j < list_variable.length; j++) {
+const getProgramCalls = (program, list_variable, list_function) => {
+    const tree = esprima.parse(program, {range: true})
+    let list_call = digCalls(tree, tree, objToArray(list_variable, 'name'), objToArray(list_function, 'name'))
+    for (let i = 0; i < list_call.length; i++) {
+        for (let j = 0; j < list_variable.length; j++) {
             if (eqArray(list_variable[j]['range_name'], list_call[i]['range'])) {
                 list_call.splice(i--, 1)
                 break
             }
         }
     }
-    
-    list_call.reverse().forEach(c => {
-        if (objtoarray(list_variable, 'name').includes(c['name']) || objtoarray(list_function, 'name').includes(c['name'])) {
-            prog = addcode(prog, c['range'], THIS)
+    return list_call
+}
+
+const getStructFunctions = (program, list_calls, list_function) => {
+    let structFunctions = []
+    list_function.forEach((f, index) => {
+        for (let call of list_calls[index].reverse()) {
+            f.code = insertKeyword(f.code, call.range, THIS)
+        }
+        f.code = getBodyFunction(f.code)
+        f.code = insertThisKeyword(f.code)
+        structFunctions.push({
+            name: f.name,
+            async: f.async,
+            params: f.params.length 
+                ? getContentOfRange(program, f.range_params) 
+                : "",
+            code: f.code
+        })
+    })
+    return structFunctions
+}
+
+const getGlobalVariable = (program, list_variable, list_call) => {
+    let global_var = []
+    list_variable.reverse().forEach((variable, index) => {
+        let listOfCallName = objToArray(list_call, 'name')
+        if (listOfCallName.includes(variable.name)) {
+            if (variable.init_type === "None" || variable.range_full === "Literal") {
+                program = replaceBySpace(program, variable.range_full)
+                global_var.push({ 
+                    name: variable.name, 
+                    value: variable.body 
+                })
+            } else {
+                program = replaceBySpace(program, [
+                    variable.range_full[0], variable.range_name[0]
+                ])
+                program = insertKeyword(program, variable.range_name, THIS)
+                variable.range_name[0] += THIS.length * (list_variable.length - index)
+                variable.range_name[1] += THIS.length * (list_variable.length - index)
+                global_var.push({
+                    name: variable.name,
+                    value: ""
+                })
+            }
         }
     })
-
-    tree = esprima.parse(prog, {range: true})
-    list_self_exec = get_self_exec(tree, tree)
-
-    duplicate = prog
-
-    if (list_self_exec.length) {
-        prog = getcontentofrange(prog, list_self_exec[0].range_body)
-        list_self_exec[0].params.forEach(p => {
-            prog = `let ${p.name} = ${getcontentofrange(duplicate, p.range_value)};\n` + prog
-        })
-    }
-
-    created = `const ${THIS.slice(0,-1)} = this; ${prog}`
-    
     return {
-        data,
-        methods,
-        created
+        global_var,
+        program,
+        list_variable
     }
 }
 
-const vanilla_to_vue = (info) => {
+const insertKeywordInProgram = (program, list_variable, list_function, list_call) => {
+    list_call.reverse().forEach(call => {
+        if (objToArray(list_variable, 'name').includes(call['name']) || objToArray(list_function, 'name').includes(call['name'])) {
+            program = insertKeyword(program, call['range'], THIS)
+        }
+    })
+    return program
+}
+
+const modifyProgramForSelfExecFunction = (program) => {
+    const tree = esprima.parse(program, {range: true})
+    const list_self_exec = digSelfExec(tree, tree)
+
+    let duplicate = program
+
+    if (list_self_exec.length) {
+        program = getContentOfRange(program, list_self_exec[0].range_body)
+        list_self_exec[0].params.forEach(param => {
+            program = `let ${param.name} = ${getContentOfRange(duplicate, param.range_value)};\n` + program
+        })
+    }
+    return program
+}
+
+const getProgramStructure = (program) => {
+    let list_function, list_call, list_variable, list_global_var;
+    let data, methods, created;
+    let original;
+    let changement;
+
+    original = program = removeComments(program)
+
+    list_function = extractFunctions(program)
+    program = deleteFunctionsInProgram(program, list_function.map(f => f = f.range_full))
+
+    list_variable = extractVariables(program)
+
+    list_call = getFunctionCalls(list_function, list_variable)
+
+    list_function = getStructFunctions(original, list_call, list_function) 
+
+    list_call = _.flattenDeep(list_call)
+
+    changement = getGlobalVariable(program, list_variable, list_call)
+    list_global_var = changement.global_var 
+    list_variable = changement.list_variable
+    program = changement.program
+
+    list_call = getProgramCalls(program, list_variable, list_function)
+    program = insertKeywordInProgram(program, list_variable, list_function, list_call)
+    program = modifyProgramForSelfExecFunction(program)
+
+    created = `const ${THIS.slice(0,-1)} = this; ${program}`
+    data = list_global_var
+    methods = list_function
+
+    return {
+        data,
+        created,
+        methods
+    }
+}
+
+const vanillaToVue = (info) => {
     let created = "", methods = "", data = ""
     info['data'].forEach(v => {
         data += `${v.name}: ${v.value ? v.value : "\"\""},\n`
@@ -128,7 +205,7 @@ const vanilla_to_vue = (info) => {
     created = `created() {${info['created']}}`
     fs.writeFileSync('./out/out.vue', `<script>\n${beautify.js(`
     export default {
-        name: 'xxx-name',
+        name: '',
         props: {},
         ${created},
         ${data},
@@ -136,5 +213,4 @@ const vanilla_to_vue = (info) => {
     }`)}\n</script>`, () => {console.log('Fichier créer avec succès !')})
 }
 
-
-vanilla_to_vue(parse_js_file(test))
+vanillaToVue(getProgramStructure(test))

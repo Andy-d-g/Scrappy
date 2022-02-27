@@ -27,7 +27,7 @@ const hasIdentifier = (init) => {
     return true
 }
 
-const dig_function = (root, tree, road = [], list_function = []) => {
+const digFunctions = (root, tree, road = [], list_function = []) => {
     let name, range_full, sub_tree, params, range_params, range_body, async;
     for (let branch in tree) {
         if (branch === "type" && tree[branch] === "VariableDeclarator" && tree['init']) {
@@ -57,13 +57,13 @@ const dig_function = (root, tree, road = [], list_function = []) => {
             list_function.push({ async, name, params, range_params, range_body, range_full })
 		}
         else if (tree[branch] !== null && typeof(tree[branch]) === "object") {
-            dig_function(root, tree[branch], [...road, branch], list_function)
+            digFunctions(root, tree[branch], [...road, branch], list_function)
 		}
     }
     return list_function
 }
 
-const dig_variable = (root, tree, road = [], list_variable = []) => {
+const digVariables = (root, tree, road = [], list_variable = []) => {
     let name, range_full, sub_tree, range_body, init_type, range_name;
     for (let branch in tree) {
         if (branch === "type" && tree[branch] === "VariableDeclarator") {
@@ -79,14 +79,14 @@ const dig_variable = (root, tree, road = [], list_variable = []) => {
         else if (tree[branch] !== null && typeof(tree[branch]) === "object") {
             sub_tree = back(root, road, 1)
             if (!(branch === "body" && tree['type'] === "FunctionExpression" && !sub_tree['callee'])) {
-                dig_variable(root, tree[branch], [...road, branch], list_variable)
+                digVariables(root, tree[branch], [...road, branch], list_variable)
             }
 		}
     }
     return list_variable
 }
 
-const get_call = (root, tree, list_variable, list_function, local_var = [], road = [], list_call = []) => {
+const digCalls = (root, tree, list_variable, list_function, local_var = [], road = [], list_call = []) => {
     let sub_tree;
     for (let branch in tree) {
         if (branch === "type" && tree[branch] === "VariableDeclarator") {
@@ -99,13 +99,13 @@ const get_call = (root, tree, list_variable, list_function, local_var = [], road
             }
 		}
         else if (tree[branch] !== null && typeof(tree[branch]) === "object") {
-            get_call(root, tree[branch], list_variable, list_function, local_var, [...road, branch], list_call)
+            digCalls(root, tree[branch], list_variable, list_function, local_var, [...road, branch], list_call)
 		}
     }
     return list_call
 }
 
-const get_self_exec = (root, tree, road = [], list_self_exec = []) => {
+const digSelfExec = (root, tree, road = [], list_self_exec = []) => {
     let sub_tree;
     let range_full, range_body, params;
     for (let branch in tree) {
@@ -123,10 +123,10 @@ const get_self_exec = (root, tree, road = [], list_self_exec = []) => {
             }
         }
         else if (tree[branch] !== null && typeof(tree[branch]) === "object") {
-            list_self_exec = get_self_exec(root, tree[branch], [...road, branch], list_self_exec)
+            list_self_exec = digSelfExec(root, tree[branch], [...road, branch], list_self_exec)
 		}
     }
     return list_self_exec
 }
 
-export {dig_function, dig_variable, get_call, get_self_exec}
+export {digFunctions, digVariables, digCalls, digSelfExec}
