@@ -1,7 +1,5 @@
 import { JSDOM } from "jsdom";
-import {css, html} from './data.js'
-import parse_css from './parse_css.js'
-import fs from 'fs'
+import cssToObj from './cssToObj.js'
 import _ from 'lodash'
 
 const removeComments = (string) => string.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g,'').trim();
@@ -12,34 +10,36 @@ const atLestOnePropertyExist = (document, properties) => {
     return false
 }
 
-const dom = new JSDOM(html);
-const document = dom.window.document;
-
-const fullCSS = parse_css(removeComments(css))
-
-const uncss = (document, full, clean) => {
-    Object.keys(full).forEach(k => {
+const cleanCSS = (html, css) => {
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    const inCSS = cssToObj(removeComments(css))
+    let outCSS = {}
+    Object.keys(inCSS).forEach(k => {
         try {
             // Si la proriété est un @media
-            if (property.includes("@media")) {
-                for (let p in full[k]) {
+            if (k.includes("@media")) {
+                let media = {}
+                for (let p in inCSS[k]) {
                     if (propertyExist(document, p)) {
-                        clean[k][p] = full[k][p]
+                        media[p] = inCSS[k][p]
                     }
+                }
+                if (Object.keys(media).length) {
+                    outCSS[k] = media
                 }
             } 
             // Si un ID est present dans une propriété, on regarde si l'on peux l'appeller dans le DOM
             else if (getIds(k).filter(id => propertyExist(document, id)).length) {
-                clean[k] = full[k]
+                outCSS[k] = inCSS[k]
             }
             // Si une des propriété de la liste contient un call vers le DOM : recupere (supprime les selector)
             else if (atLestOnePropertyExist(document, k.split(',').map(_k => _.replace(_k, /:{1,2}[\w-]+/g, '')))) {
-                clean[k] = full[k]
+                outCSS[k] = inCSS[k]
             }
         } catch (err) {}
-
     })
-    return clean
+    return outCSS
 }
 
-fs.writeFileSync('./out/test.css', JSON.stringify(uncss(document, fullCSS, {}), null, 4))
+export default cleanCSS

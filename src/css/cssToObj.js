@@ -59,7 +59,7 @@ const sanitazeSelector = (selector) => {
     return parts.join(', ')
 }
 
-const _parse_css_file = (css, i) => {
+const _cssToObj = (css, i) => {
     let buffer = ''
     let obj = {}
     let selector = ''
@@ -72,7 +72,7 @@ const _parse_css_file = (css, i) => {
         else if (css[i] === '{') {
             selector = sanitazeSelector(buffer.trim())
             buffer = ''
-            let res = _parse_css_file(css, i+1)
+            let res = _cssToObj(css, i+1)
             obj[selector] = {...obj[selector], ...res.data}
             i = res.index
         }
@@ -104,6 +104,6 @@ const _parse_css_file = (css, i) => {
     return obj
 }
 
-const parse_css_file = (f) => _parse_css_file(f, 0)
+const cssToObj = (f) => _cssToObj(f, 0)
 
-export default parse_css_file
+export default cssToObj

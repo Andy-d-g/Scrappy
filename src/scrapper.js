@@ -1,40 +1,10 @@
 import puppeteer from 'puppeteer';
 import beautify from 'js-beautify'
-import uncss from 'uncss'
-import { create_component } from './utils.js'
-import parse_css_file from './css/parse_css.js';
+import cleanCSS from './css/cleanCSS.js'
+import { createComponent, objToCSS, merge } from './utils.js'
+import fs from 'fs'
 
 const HEADLESS = true
-
-const _objToCSS = (obj) => {
-    let cssfile = ''
-    Object.keys(obj).forEach(k => {
-        if (typeof obj[k] === 'object' && obj[k] !== null) cssfile += `${k} {${_objToCSS(obj[k])}}`
-        else cssfile += `${k}: ${obj[k]};`
-    })
-    return cssfile
-}
-
-const objToCSS = (obj) => beautify.css(_objToCSS(obj), { indent_size: 4, space_in_empty_paren: true })
-
-const merge = (current, updates) => {
-    for (let key of Object.keys(updates)) {
-        if (!current.hasOwnProperty(key) || typeof updates[key] !== 'object') current[key] = updates[key];
-        else merge(current[key], updates[key]);
-    }
-    return current;
-}
-/*
-const mergeStylesSheets = (styles_sheet) => {
-    let obj = {}
-    styles_sheet.forEach(sheet => {
-        sheet.data.forEach(css => {
-            obj = merge(obj, parse_css_file(css))
-        })
-    })
-    return obj
-}
-*/
 
 const mergeStylesSheets = (styles_sheets) => {
     let css = ""
@@ -44,15 +14,6 @@ const mergeStylesSheets = (styles_sheets) => {
         })
     })
     return css
-}
-
-const cleanStylesSheets = (styles_sheet, html) => {
-    styles_sheet.forEach(sheet => {
-        sheet.data.forEach(css => {
-            uncss(html, {raw: css}, (_, output) => console.log(output))
-        })
-    })
-    return styles_sheet
 }
 
 const getStylesSheets = async (page) => page.$eval('html', (doc) => {
@@ -122,9 +83,7 @@ const filtreCSS = async (url, selector, resolution, styles_sheets) => {
 
         await browser.close();
 
-        css = await uncss(html, {raw: styles_sheets, ignoreSheets : [/fonts.googleapis/]}, () => {})
-
-        return parse_css_file(css)
+        return cleanCSS(html, styles_sheets)
     } catch (err) {
         throw new Error(err);
     }
@@ -148,14 +107,13 @@ const scrappy = async (url, selector) => {
         styles_sheets = mergeStylesSheets(styles_sheets)
         
         for (let resolution of resolutions) {
-            //sub_css = await getCSS(url, selector, resolution)
+            console.log(`Resolution : [${resolution.width}/${resolution.height}]`)
             sub_css = await filtreCSS(url, selector, resolution, styles_sheets)
             obj = merge(obj, sub_css)
         }
         
-        //obj = cleanCSS(obj)
         css = objToCSS(obj)
-        create_component(html, css, js)
+        createComponent(html, css, js)
 
     } catch (err) {
         throw new Error(err);
