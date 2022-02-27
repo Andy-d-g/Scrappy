@@ -19,8 +19,6 @@
 
 Ce programme permet de récupérer du code de page web pour le transformer en component VUE avec seulement le code CSS nécessaire pour le chemin CSS donné.
 
-[Le README n'est plus à jour]
-
 ## Installation
 
 Depuis votre terminal de commande : 
@@ -38,24 +36,18 @@ $ npm run start
 # Lancer le scrapper
 $ node src/scrapper <url> <selector>
 
-# Lancer le cleaner après nettoyage manuel de l'index.html
-$ node src/sanitazer
-
 ```
 
 ## Resultat
 
-Les fichiers ```vue``` est généré.
+Les fichiers ```vue``` est généré dans le dossier out/.
 
 ## Exemple
-```node
 
-# Récupère html + js + css -> vue
-$ node src/scrapper https://bootstrapmade.com/demo/templates/OnePage/ #header
-
-# Permet à l'utilisateur de nettoyer le fichier créer
-$ node src/sanitazer
 ```
+  node src/scrapper https://bootstrapmade.com/demo/templates/OnePage/ #header
+```
+
 ## Contributeurs
 
 @Andy-d-g
