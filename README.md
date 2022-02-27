@@ -3,7 +3,7 @@
     <br>
     <a href=""><img src="stealing-data.png" alt="Favicon" width="200"></a>
     <br>
-    Scrappy
+      Scrappy
     <br>
   </h1>
 </div>
@@ -18,6 +18,8 @@
 # A propos
 
 Ce programme permet de récupérer du code de page web pour le transformer en component VUE avec seulement le code CSS nécessaire pour le chemin CSS donné.
+
+[Le README n'est plus à jour]
 
 ## Installation
 
@@ -43,14 +45,17 @@ $ node src/sanitazer
 
 ## Resultat
 
-Les fichiers `index.vue` + `index.html` + `styles.css` sont générés.
+Les fichiers ```vue``` est généré.
 
 ## Exemple
+```node
 
-```node src/scrapper https://bootstrapmade.com/ #header```
+# Récupère html + js + css -> vue
+$ node src/scrapper https://bootstrapmade.com/demo/templates/OnePage/ #header
 
-```node src/sanitazer```
-
+# Permet à l'utilisateur de nettoyer le fichier créer
+$ node src/sanitazer
+```
 ## Contributeurs
 
 @Andy-d-g

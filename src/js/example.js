@@ -1,5 +1,4 @@
-export default `
-/**
+export default `/**
 * Template Name: OnePage - v4.7.0
 * Template URL: https://bootstrapmade.com/onepage-multipurpose-bootstrap-template/
 * Author: BootstrapMade.com
@@ -267,5 +266,4 @@ export default `
     })
   });
 
-})()
-`
+})()`

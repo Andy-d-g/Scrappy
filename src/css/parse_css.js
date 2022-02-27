@@ -73,7 +73,7 @@ const _parse_css_file = (css, i) => {
             selector = sanitazeSelector(buffer.trim())
             buffer = ''
             let res = _parse_css_file(css, i+1)
-            obj[selector] = res.data
+            obj[selector] = {...obj[selector], ...res.data}
             i = res.index
         }
         else if (css[i] === '}') {

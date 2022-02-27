@@ -1,7 +1,8 @@
 import esprima from "esprima"
 import {dig_function, dig_variable, get_call, get_self_exec} from "./dig.js"
-import test from "./test.js"
+import test from "./example.js"
 import beautify from 'js-beautify'
+import fs from 'fs'
 
 const THIS = "self."
 
@@ -18,7 +19,6 @@ const objtoarray = (obj, property) => obj.map(o => o[property])
 const getparameters = (obj, property) => objtoarray(obj.map(o => o['name'] ? o : o['left']), property)
 
 const cleanfunction = (func) => getcontentofrange(func, [func.indexOf('{')+1, func.length-1])
- 
 
 const eqArray = (a,b) => {
 	if (a.length !== b.length) return false
@@ -55,7 +55,7 @@ const parse_js_file = (prog) => {
             f.code = addcode(f.code, call.range, THIS)
         }
         f.code = cleanfunction(f.code)
-        f.code = `const ${THIS} = this;${f.code}` 
+        f.code = `const ${THIS.slice(0,-1)} = this;${f.code}` 
         methods.push({ name: f.name, async: f.async, params: f.params.length ? getcontentofrange(original, f.range_params) : "", code: f.code })
     })
     
@@ -106,9 +106,7 @@ const parse_js_file = (prog) => {
         })
     }
 
-    created = `const self = this; ${prog}`
-
-    //console.log(created)
+    created = `const ${THIS.slice(0,-1)} = this; ${prog}`
     
     return {
         data,
@@ -124,42 +122,19 @@ const vanilla_to_vue = (info) => {
     })
     data = `data() {\nreturn {\n${data}}\n}`
     info['methods'].forEach(f => {
-        methods += `${f.name}(${f.params}){${f.code}}\n`
+        methods += `${f.name}(${f.params}){${f.code}},\n`
     })
     methods = `methods: {\n${methods}\n}`
     created = `created() {${info['created']}}`
-    return beautify.js(`export default {
+    fs.writeFileSync('./out/out.vue', `<script>\n${beautify.js(`
+    export default {
         name: 'xxx-name',
         props: {},
         ${created},
         ${data},
         ${methods}
-    }`)
+    }`)}\n</script>`, () => {console.log('Fichier créer avec succès !')})
 }
 
-const program = `
-(function() {
-    let x = z;
-    const w = x;
-    const a = (y = 3) => {x = w}
-    const b = function() {
-        let v = x;
-        v = w;
-        return 3;
-    }
-    function c() {
-        let v = x;
-        let y = a()
-        b()
-    }
-    c()
-    x.addEventlistener("event", function(){
-        let t = x
-        a()
-    })
-})()
-`
 
-
-//parse_js_file(test)
-console.log(vanilla_to_vue(parse_js_file(test)))
+vanilla_to_vue(parse_js_file(test))
