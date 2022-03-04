@@ -180,7 +180,7 @@ const getProgramStructure = (program) => {
 
     program = `const ${THIS.slice(0,-1)} = this; ${program}`
     
-    created = _.replace(program, /(\r?\n){2,}/g, '')
+    created = _.replace(program, /(\r?\n){2,}/g, '\n')
     data = list_global_var
     methods = list_function
 
