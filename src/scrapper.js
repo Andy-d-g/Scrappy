@@ -64,8 +64,8 @@ const getHTMLJSCSS = async (url, selector) => {
     }
 }
 
-const filtreCSS = async (url, selector, resolution, styles_sheets) => {
-    let html
+const filtreCSS = async (url, selector, resolution, styles) => {
+    let html, css = {}
     try {
         const browser = await puppeteer.launch({
             headless: HEADLESS,
@@ -81,29 +81,41 @@ const filtreCSS = async (url, selector, resolution, styles_sheets) => {
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:96.0) Gecko/20100101 Firefox/96.0');
         await page.goto(url);
-        
+        await page.waitForSelector(selector)
         html = await page.$eval(selector, doc => doc.outerHTML)
+        css = _.merge(css, cleanCSS(html, styles))
 
         await page.exposeFunction("getEvent", async (expression) => {
             const client = await page.target().createCDPSession();
-            const body = await client.send("Runtime.evaluate", { expression : `document.querySelector("${expression}")` });
-            return await client.send("DOMDebugger.getEventListeners", { objectId : body["result"]["objectId"] });
+            const el = await client.send("Runtime.evaluate", { expression : `document.querySelector("${expression}")` });
+            return await client.send("DOMDebugger.getEventListeners", { objectId : el["result"]["objectId"] });
         })
-        await page.waitForSelector(selector)
-        let events = await listEvents(page, selector)
-        Object.keys(events).forEach(k => {
-            console.log(events[k])
-        })
+        
+        let listeners = await listListeners(page, selector)
+        for (let listenerSelector in listeners) {
+            for (let listener of listeners[listenerSelector]) {
+                if (listener.type === "click") {
+                    try {
+                        await page.click(listenerSelector)
+                        html = await page.$eval(selector, doc => doc.outerHTML)
+                        css = _.merge(css, cleanCSS(html, styles))
+                    } catch (err) {
+                        console.log(`Error : ${listenerSelector}`)
+                        console.error(err)
+                    }
+                }
+            }
+        }
 
         await browser.close();
 
-        return cleanCSS(html, styles_sheets)
+        return css
     } catch (err) {
         throw new Error(err);
     }
 }
 
-const listEvents = async (page, selector) => page.$eval(selector, async (document) => {
+const listListeners = async (page, selector) => page.$eval(selector, async (document) => {
         const generateQuerySelector = (el) => {
             if (el.tagName.toLowerCase() == "html")
                 return "HTML";
@@ -128,7 +140,7 @@ const listEvents = async (page, selector) => page.$eval(selector, async (documen
             selectorEl = generateQuerySelector(currentEl)
             eventsEl = await window.getEvent(selectorEl)
             if (eventsEl.listeners.length) {
-                events[selectorEl] = eventsEl
+                events[selectorEl] = eventsEl.listeners
             }
             list.shift()
             let childrens = [...currentEl.children]
