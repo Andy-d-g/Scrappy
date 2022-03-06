@@ -202,7 +202,7 @@ const vanillaToVue = (program) => {
         methods += `${f.name}(${f.params}){${f.code}},\n`
     })
     methods = `methods: {\n${methods}\n}`
-    created = `created() {${info['created']}}`
+    created = `mounted() {${info['created']}}`
     return `export default {
         name: '',
         props: {},
