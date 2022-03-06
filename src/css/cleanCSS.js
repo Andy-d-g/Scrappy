@@ -60,7 +60,6 @@ const cleanCSS = (html, css) => {
             else {
                 formatProperties(k).forEach(property => {
                     if (propertyExist(document, _.replace(property, /:{1,2}[\w-]+/g, ''))) {
-                        console.log(property)
                         outCSS[property] = {...outCSS[property], ...inCSS[k]}
                     }
                 })
