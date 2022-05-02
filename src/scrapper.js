@@ -7,6 +7,7 @@ import vanillaToVue from './js/vanillaToVue.js'
 import _ from 'lodash'
 
 const HEADLESS = true
+const GET_JS = false
 
 const mergeStylesSheets = (styles_sheets) => {
     let css = ''
@@ -53,7 +54,7 @@ const getHTMLJSCSS = async (url, selector) => {
         await page.waitForSelector(selector)
         html = await page.$eval(selector, doc => doc.outerHTML)
 
-        js = await getScript(page)
+        if (GET_JS) js = await getScript(page)
         css = await getStylesSheets(page)
 
         await browser.close();
@@ -154,8 +155,8 @@ const listListeners = async (page, selector) => page.$eval(selector, async (docu
 const scrappy = async (url, selector) => {
     const resolutions = [
         {width: 400, height: 800, isMobile: true}, // Smartphone
-        //{width: 800, height: 1100, isMobile: false}, // Tablette
-        //{width: 1920, height: 1080, isMobile: false}  // Computer
+        {width: 800, height: 1100, isMobile: false}, // Tablette
+        {width: 1920, height: 1080, isMobile: false}  // Computer
     ]
     let html, css, js, html_js_css, sub_css, styles_sheets, obj;
     try {
@@ -174,9 +175,11 @@ const scrappy = async (url, selector) => {
             obj = _.merge(obj, sub_css)
         }
 
-        js = await axios.get(js)
-        js = vanillaToVue(js.data)
-        
+        if (GET_JS) {
+            js = await axios.get(js);
+            js = vanillaToVue(js.data);
+        } 
+
         css = objToCss(obj)
         createComponent(html, css, js)
 
